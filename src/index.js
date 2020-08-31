@@ -30,6 +30,7 @@ export default class Gantt {
 
         // CSS Selector is passed
         if (typeof element === 'string') {
+            // 获得element元素  element是一个选择器 例如 "#demo"
             element = document.querySelector(element);
         }
 
@@ -49,6 +50,7 @@ export default class Gantt {
         // svg element
         if (!svg_element) {
             // create it
+            // 创建 svg 元素 并添加 'gantt' class
             this.$svg = createSVG('svg', {
                 append_to: wrapper_element,
                 class: 'gantt'
