@@ -332,6 +332,7 @@ export default class Gantt {
             this.options.header_height +
             this.options.padding +
             (this.options.bar_height + this.options.padding) *
+            // (this.options.bar_height ) *  // 减小高度
                 this.tasks.length;
 
         createSVG('rect', {
@@ -343,8 +344,13 @@ export default class Gantt {
             append_to: this.layers.grid
         });
 
+        // $.attr(this.$svg, {
+        //     height: grid_height + this.options.padding + 100,
+        //     width: '100%'
+        // });
+        // gantt 容器与内容一样高
         $.attr(this.$svg, {
-            height: grid_height + this.options.padding + 100,
+            height: grid_height,
             width: '100%'
         });
     }
@@ -354,7 +360,7 @@ export default class Gantt {
         const lines_layer = createSVG('g', { append_to: this.layers.grid });
 
         const row_width = this.dates.length * this.options.column_width;
-        const row_height = this.options.bar_height + this.options.padding;
+        const row_height = this.options.bar_height + this.options.padding;  // 行高
 
         let row_y = this.options.header_height + this.options.padding / 2;
 

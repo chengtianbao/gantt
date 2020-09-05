@@ -1053,6 +1053,7 @@ class Gantt {
 
         // CSS Selector is passed
         if (typeof element === 'string') {
+            // 获得element元素  element是一个选择器 例如 "#demo"
             element = document.querySelector(element);
         }
 
@@ -1072,34 +1073,41 @@ class Gantt {
         // svg element
         if (!svg_element) {
             // create it
+            // 创建 svg 元素 并添加 'gantt' class
             this.$svg = createSVG('svg', {
                 append_to: wrapper_element,
                 class: 'gantt'
             });
         } else {
+            // 追加 svg 元素 'gantt' class
             this.$svg = svg_element;
             this.$svg.classList.add('gantt');
         }
 
         // wrapper element
+        // 容器元素
         this.$container = document.createElement('div');
         this.$container.classList.add('gantt-container');
 
+        // 将 svg 元素 放入 容器元素内
         const parent_element = this.$svg.parentElement;
         parent_element.appendChild(this.$container);
         this.$container.appendChild(this.$svg);
 
         // popup wrapper
+        // 创建弹窗容器元素并放入到容器元素内
+        // 
         this.popup_wrapper = document.createElement('div');
         this.popup_wrapper.classList.add('popup-wrapper');
         this.$container.appendChild(this.popup_wrapper);
     }
 
+    // 设置配置
     setup_options(options) {
         const default_options = {
             header_height: 50,
             column_width: 30,
-            step: 24,
+            step: 24,  // 步长 24小时
             view_modes: [...Object.values(VIEW_MODE)],
             bar_height: 20,
             bar_corner_radius: 3,
@@ -1111,6 +1119,8 @@ class Gantt {
             custom_popup_html: null,
             language: 'en'
         };
+
+        // 合并默认配置及自定义配置
         this.options = Object.assign({}, default_options, options);
     }
 
@@ -1118,10 +1128,12 @@ class Gantt {
         // prepare tasks
         this.tasks = tasks.map((task, i) => {
             // convert to Date objects
+
             task._start = date_utils.parse(task.start);
             task._end = date_utils.parse(task.end);
 
             // make task invalid if duration too large
+            // 任务间隔时间不能超过十年
             if (date_utils.diff(task._end, task._start, 'year') > 10) {
                 task.end = null;
             }
@@ -1130,16 +1142,19 @@ class Gantt {
             task._index = i;
 
             // invalid dates
+            // 如果没有开始日期及结束日期 则 默认 开始日期为今天  结束时间为两天后
             if (!task.start && !task.end) {
                 const today = date_utils.today();
                 task._start = today;
                 task._end = date_utils.add(today, 2, 'day');
             }
 
+            // 如果没有开始日期而有结束日期 则开始时间为结束时间两天前
             if (!task.start && task.end) {
                 task._start = date_utils.add(task._end, -2, 'day');
             }
 
+            // 如果有开始日期而没有结束日期 则结束日期为结束时间两天后
             if (task.start && !task.end) {
                 task._end = date_utils.add(task._start, 2, 'day');
             }
@@ -1156,10 +1171,11 @@ class Gantt {
                 task.invalid = true;
             }
 
-            // dependencies
+            // dependencies  依赖
             if (typeof task.dependencies === 'string' || !task.dependencies) {
                 let deps = [];
                 if (task.dependencies) {
+                    // '1, 2, 3'  => [1, 2, 3]
                     deps = task.dependencies
                         .split(',')
                         .map(d => d.trim())
@@ -1179,6 +1195,12 @@ class Gantt {
         this.setup_dependencies();
     }
 
+    // 设置依赖映射
+    // eg result: dependency_map = {
+    //     '1' : ['2', '3'],
+    //     '2' : ['4'],
+    //     ...
+    // }
     setup_dependencies() {
         this.dependency_map = {};
         for (let t of this.tasks) {
@@ -1189,11 +1211,13 @@ class Gantt {
         }
     }
 
+    // 刷新
     refresh(tasks) {
         this.setup_tasks(tasks);
         this.change_view_mode();
     }
 
+    // 改变视觉模式
     change_view_mode(mode = this.options.view_mode) {
         this.update_view_scale(mode);
         this.setup_dates();
@@ -1202,6 +1226,7 @@ class Gantt {
         this.trigger_event('view_change', [mode]);
     }
 
+    // 更新视图范围
     update_view_scale(view_mode) {
         this.options.view_mode = view_mode;
 
@@ -1330,6 +1355,7 @@ class Gantt {
             this.options.header_height +
             this.options.padding +
             (this.options.bar_height + this.options.padding) *
+            // (this.options.bar_height ) *  // 减小高度
                 this.tasks.length;
 
         createSVG('rect', {
@@ -1341,8 +1367,13 @@ class Gantt {
             append_to: this.layers.grid
         });
 
+        // $.attr(this.$svg, {
+        //     height: grid_height + this.options.padding + 100,
+        //     width: '100%'
+        // });
+        // gantt 容器与内容一样高
         $.attr(this.$svg, {
-            height: grid_height + this.options.padding + 100,
+            height: grid_height,
             width: '100%'
         });
     }
@@ -1352,7 +1383,7 @@ class Gantt {
         const lines_layer = createSVG('g', { append_to: this.layers.grid });
 
         const row_width = this.dates.length * this.options.column_width;
-        const row_height = this.options.bar_height + this.options.padding;
+        const row_height = this.options.bar_height + this.options.padding;  // 行高
 
         let row_y = this.options.header_height + this.options.padding / 2;
 
